@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>سفنز للسيارات | تسجيل الأعمال</title>
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#0B5ED7">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#F6F8FC;
+      --card:#FFFFFF;
+      --txt:#0F172A;
+      --muted:#64748B;
+      --line:#E2E8F0;
+      --primary:#0B5ED7;
+      --primary-2:#1E88FF;
+      --primary-soft:rgba(11,94,215,.12);
+      --shadow: 0 10px 30px rgba(2, 6, 23, .08);
+      --radius: 18px;
+    }
+    body{
+      font-family:"Tajawal", system-ui, -apple-system, Segoe UI, Arial;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(11,94,215,.16), transparent 55%),
+                  radial-gradient(900px 500px at 110% 0%, rgba(30,136,255,.12), transparent 45%),
+                  var(--bg);
+      color:var(--txt);
+    }
+    .app-shell{ min-height:100vh; display:flex; flex-direction:column; }
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(246,248,252,.7);
+      border-bottom:1px solid rgba(226,232,240,.8);
+    }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand-badge{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: 0 12px 24px rgba(11,94,215,.25);
+      position:relative; overflow:hidden;
+    }
+    .brand-badge::after{
+      content:""; position:absolute; inset:-40%;
+      background: linear-gradient(120deg, rgba(255,255,255,.45), transparent 60%);
+      transform: rotate(25deg);
+    }
+    .brand-title{ line-height:1.1; font-weight:800; letter-spacing:.2px; }
+    .brand-sub{ font-size:.9rem; color:var(--muted); margin-top:2px; }
+    .container-narrow{
+  max-width: 980px;
+  margin-inline: auto;
+  padding-inline: 12px;
+}
+
+    .cardx{
+      background:var(--card);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(226,232,240,.9);
+      background:rgba(255,255,255,.7);
+      color:var(--muted);
+      font-size:.9rem;
+    }
+    .nav-tabs .nav-link{
+      border:none !important;
+      border-radius: 14px !important;
+      padding: 12px 14px;
+      color: var(--muted);
+      font-weight:700;
+      background: transparent;
+    }
+    .nav-tabs{ border-bottom:none; gap:8px; }
+    .nav-tabs .nav-link.active{
+      background: linear-gradient(135deg, rgba(11,94,215,.12), rgba(30,136,255,.10));
+      color: var(--primary);
+      box-shadow: inset 0 0 0 1px rgba(11,94,215,.18);
+      font-weight:800;
+    }
+    .form-label{
+  font-weight:700;
+  color:#0B1220;
+  margin-bottom:4px;
+  font-size:.92rem;
+}
+
+    .form-control, .form-select{
+      border-radius: 14px;
+      border:1px solid rgba(226,232,240,.95);
+      padding: 12px 12px;
+      background:#fff;
+    }
+    .form-control:focus, .form-select:focus{
+      border-color: rgba(11,94,215,.55);
+      box-shadow: 0 0 0 .2rem rgba(11,94,215,.12);
+    }
+    .btn-primary{
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border:none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight:800;
+      box-shadow: 0 16px 30px rgba(11,94,215,.24);
+      letter-spacing:.3px;
+    }
+    .btn-outline{
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight:800;
+      border:1px solid rgba(226,232,240,.95);
+      color: var(--txt);
+      background:#fff;
+    }
+    .section-title{ font-weight:900; font-size:1.2rem; margin:0; }
+    .section-hint{ color:var(--muted); margin:0; font-size:.92rem; }
+    .signature-wrap{
+  border:1px dashed rgba(100,116,139,.35);
+  border-radius: 14px;
+  background: #F9FBFF;
+  padding: 10px;
+}
+
+    canvas.signature{
+      width:100%;
+      height:140px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid rgba(226,232,240,.95);
+      touch-action:none;
+    }
+    .toastx{
+      position: fixed;
+      bottom: 18px;
+      left: 18px;
+      right: 18px;
+      z-index: 9999;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+    }
+    .toastx .inner{
+      pointer-events:auto;
+      max-width: 740px;
+      width: min(740px, 92vw);
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, .92);
+      color:#fff;
+      box-shadow: 0 20px 50px rgba(2,6,23,.35);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      opacity:0;
+      transform: translateY(10px);
+      transition: .25s ease;
+    }
+    .toastx .inner.show{ opacity:1; transform: translateY(0); }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size:.85rem;
+      color: rgba(255,255,255,.95);
+      white-space:nowrap;
+    }
+    @media (max-width: 576px){
+      .brand-title{ font-size: 1.05rem; }
+      .brand-sub{ font-size: .85rem; }
+      canvas.signature{ height:150px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <header class="topbar py-3">
+      <div class="container-narrow d-flex align-items-center justify-content-between gap-3">
+        <div class="brand">
+  <img
+    src="{{ url_for('static', filename='7s.jpg') }}"
+    alt="شعار سفنز"
+    style="
+      width:48px;
+      height:48px;
+      object-fit:contain;
+      border-radius:14px;
+      box-shadow:0 10px 25px rgba(11,94,215,.25);
+      background:#fff;
+      padding:4px;
+    "
+  >
+  <div>
+    <div class="brand-title">سفنز للسيارات</div>
+    <div class="brand-sub">ورشة الصيانة + مغسلة السيارات (نظام تسجيل رقمي)</div>
+  </div>
+</div>
+
+
+        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+          <span class="pill">المستخدم: <strong class="text-dark ms-1">{{ user_name or "موظف" }}</strong></span>
+
+          <!-- CTRL+F: REMOVE DASHBOARD BUTTON -->
+          <!-- تم حذف زر لوحة البيانات من صفحة العمل حسب طلبك -->
+
+          <a href="/logout" class="btn btn-outline">تسجيل خروج</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="py-3 py-md-4">
+      <div class="container-narrow">
+
+        <div class="cardx p-3 p-md-4 mb-3">
+            <hr class="my-3 opacity-50">
+          <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
+            <div>
+              <h1 class="section-title mb-1">تسجيل عملية جديدة</h1>
+                <!-- ===== CAR CARD (Vehicle entered once) ===== -->
+<div class="cardx p-3 p-md-4 mt-2 mb-3">
+  <h2 class="section-title mb-2">🚗 بيانات السيارة</h2>
+  <p class="section-hint mb-3">يتم إدخال رقم اللوحة / الهيكل مرة واحدة ويُستخدم في الصيانة والغسيل.</p>
+
+  <div class="row g-3">
+    <div class="col-12 col-md-6">
+      <label class="form-label">رقم اللوحة / الهيكل</label>
+      <input
+        type="text"
+        class="form-control"
+        id="vehicle_master"
+        placeholder="مثال: ABC 1234 أو VIN..."
+        required
+      >
+    </div>
+  </div>
+</div>
+
+              <p class="section-hint">اختر التبويب (صيانة / غسيل) ثم أدخل البيانات. يتم حساب إجمالي الوقت تلقائيًا.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center mt-2 mt-md-0">
+              <button class="btn btn-outline" id="btnNow" type="button">تعبئة التاريخ والوقت الآن</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cardx p-3 p-md-4">
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="tab-maint" data-bs-toggle="tab" data-bs-target="#pane-maint" type="button" role="tab">
+                🔧 الصيانة
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-wash" data-bs-toggle="tab" data-bs-target="#pane-wash" type="button" role="tab">
+                🚿 الغسيل
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content mt-3">
+
+            <!-- ====== MAINTENANCE ====== -->
+            <div class="tab-pane fade show active" id="pane-maint" role="tabpanel" aria-labelledby="tab-maint">
+              <form id="formMaint" class="mt-2" method="post" action="/submit/maintenance" novalidate>
+                  <input type="hidden" name="vehicle_id" id="m_vehicle_id">
+                <div class="row g-3">
+                  <div class="col-12 col-lg-6">
+                    <label class="form-label">وصف الصيانة</label>
+                    <textarea class="form-control" name="description" rows="3" placeholder="مثال: تغيير زيت + فحص فرامل" required></textarea>
+                  </div>
+
+                  <div class="col-12 col-lg-3">
+                    <label class="form-label">التاريخ</label>
+                    <input type="date" class="form-control" name="date" id="m_date" required>
+                  </div>
+
+                  <div class="col-12 col-lg-3">
+                    <label class="form-label">اسم الفني / الموظف</label>
+                    <input type="text" class="form-control" name="employee" value="{{ user_name or '' }}" required>
+                  </div>
+
+
+
+                  <div class="col-6 col-lg-2">
+                    <label class="form-label">وقت الدخول</label>
+                    <input type="time" class="form-control" name="start_time" id="m_start" required>
+                  </div>
+
+                  <div class="col-6 col-lg-2">
+                    <label class="form-label">وقت الخروج</label>
+                    <input type="time" class="form-control" name="end_time" id="m_end" required>
+                  </div>
+
+                  <div class="col-12 col-lg-4">
+                    <label class="form-label">إجمالي الوقت</label>
+                    <input type="text" class="form-control" name="total_time" id="m_total" placeholder="يُحسب تلقائيًا" readonly>
+                    <div class="form-text text-muted mt-1">سيتم حساب الفرق بين وقت الدخول ووقت الخروج.</div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="signature-wrap">
+                      <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                        <div>
+                          <div class="fw-bold">توقيع الفني / الموظف (توثيق)</div>
+                          <div class="text-muted small">ارسم التوقيع داخل المربع ثم اضغط اعتماد.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                          <button type="button" class="btn btn-outline" id="m_clearSig">مسح التوقيع</button>
+                          <button type="button" class="btn btn-outline" id="m_saveSig">اعتماد التوقيع</button>
+                        </div>
+                      </div>
+                      <canvas class="signature" id="m_sig"></canvas>
+                      <input type="hidden" name="signature_data" id="m_sigData">
+                    </div>
+                  </div>
+
+                  <div class="col-12 d-flex gap-2 flex-wrap justify-content-end mt-2">
+                    <button type="reset" class="btn btn-outline">تفريغ</button>
+                    <button type="submit" class="btn btn-primary">حفظ عملية الصيانة</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- ====== WASH ====== -->
+            <div class="tab-pane fade" id="pane-wash" role="tabpanel" aria-labelledby="tab-wash">
+              <form id="formWash" class="mt-2" method="post" action="/submit/wash" novalidate>
+                  <input type="hidden" name="vehicle_id" id="w_vehicle_id">
+                <div class="row g-3">
+                  <div class="col-12 col-lg-3">
+                    <label class="form-label">التاريخ</label>
+                    <input type="date" class="form-control" name="date" id="w_date" required>
+                  </div>
+
+                  <div class="col-12 col-lg-3">
+                    <label class="form-label">اسم الفني / الموظف</label>
+                    <input type="text" class="form-control" name="employee" value="{{ user_name or '' }}" required>
+                  </div>
+
+
+
+                  <div class="col-6 col-lg-3">
+                    <label class="form-label">وقت الدخول</label>
+                    <input type="time" class="form-control" name="start_time" id="w_start" required>
+                  </div>
+
+                  <div class="col-6 col-lg-3">
+                    <label class="form-label">وقت الخروج</label>
+                    <input type="time" class="form-control" name="end_time" id="w_end" required>
+                  </div>
+
+                  <div class="col-12 col-lg-6">
+                    <label class="form-label">إجمالي الوقت</label>
+                    <input type="text" class="form-control" name="total_time" id="w_total" placeholder="يُحسب تلقائيًا" readonly>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label">ملاحظة (اختياري)</label>
+                    <input type="text" class="form-control" name="note" placeholder="مثال: غسيل شامل + تلميع">
+                  </div>
+
+                  <div class="col-12">
+                    <div class="signature-wrap">
+                      <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                        <div>
+                          <div class="fw-bold">توقيع الفني / الموظف (توثيق)</div>
+                          <div class="text-muted small">ارسم التوقيع داخل المربع ثم اضغط اعتماد.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                          <button type="button" class="btn btn-outline" id="w_clearSig">مسح التوقيع</button>
+                          <button type="button" class="btn btn-outline" id="w_saveSig">اعتماد التوقيع</button>
+                        </div>
+                      </div>
+                      <canvas class="signature" id="w_sig"></canvas>
+                      <input type="hidden" name="signature_data" id="w_sigData">
+                    </div>
+                  </div>
+
+                  <div class="col-12 d-flex gap-2 flex-wrap justify-content-end mt-2">
+                    <button type="reset" class="btn btn-outline">تفريغ</button>
+                    <button type="submit" class="btn btn-primary">حفظ عملية الغسيل</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <div class="toastx" aria-live="polite" aria-atomic="true">
+      <div class="inner" id="toast">
+        <div id="toastMsg">رسالة</div>
+        <button class="btn btn-sm btn-light" id="toastClose" type="button">إغلاق</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ===== Helpers =====
+    const toastEl = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastClose = document.getElementById('toastClose');
+
+    function showToast(msg){
+      toastMsg.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(()=>toastEl.classList.remove('show'), 2800);
+    }
+    toastClose.addEventListener('click', ()=>toastEl.classList.remove('show'));
+
+    function pad2(n){ return String(n).padStart(2,'0'); }
+
+    function setNow(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = pad2(d.getMonth()+1);
+      const dd = pad2(d.getDate());
+      const hh = pad2(d.getHours());
+      const mi = pad2(d.getMinutes());
+
+      document.getElementById('m_date').value = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('w_date').value = `${yyyy}-${mm}-${dd}`;
+
+      if(!document.getElementById('m_start').value) document.getElementById('m_start').value = `${hh}:${mi}`;
+      if(!document.getElementById('w_start').value) document.getElementById('w_start').value = `${hh}:${mi}`;
+
+      showToast("تم تعبئة التاريخ والوقت الحالي.");
+    }
+    document.getElementById('btnNow').addEventListener('click', setNow);
+
+    // ===== Time Calculation =====
+    function calcTotal(startId, endId, totalId){
+      const s = document.getElementById(startId).value;
+      const e = document.getElementById(endId).value;
+      const out = document.getElementById(totalId);
+
+      if(!s || !e){ out.value = ""; return; }
+
+      const [sh, sm] = s.split(':').map(Number);
+      const [eh, em] = e.split(':').map(Number);
+
+      const start = sh*60 + sm;
+      const end = eh*60 + em;
+
+      let diff = end - start;
+      if(diff < 0) diff += 24*60; // دعم عبور منتصف الليل
+
+      const h = Math.floor(diff/60);
+      const m = diff % 60;
+
+      out.value = `${h} ساعة و ${m} دقيقة`;
+    }
+
+    ['m_start','m_end'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', ()=>calcTotal('m_start','m_end','m_total'));
+    });
+    ['w_start','w_end'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', ()=>calcTotal('w_start','w_end','w_total'));
+    });
+
+    // ===== Signature Pad (Canvas) =====
+    function setupSignature(canvasId, clearBtnId, saveBtnId, hiddenInputId){
+      const canvas = document.getElementById(canvasId);
+      const clearBtn = document.getElementById(clearBtnId);
+      const saveBtn = document.getElementById(saveBtnId);
+      const hidden = document.getElementById(hiddenInputId);
+      const ctx = canvas.getContext('2d');
+
+      function resize(){
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+        // reset transform to avoid scale stacking
+        ctx.setTransform(1,0,0,1,0,0);
+
+        canvas.width = rect.width * ratio;
+        canvas.height = rect.height * ratio;
+
+        ctx.setTransform(ratio,0,0,ratio,0,0);
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0B5ED7';
+      }
+      resize();
+
+      window.addEventListener('resize', ()=>{
+        const data = canvas.toDataURL();
+        resize();
+        const img = new Image();
+        img.onload = ()=>ctx.drawImage(img, 0, 0, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height);
+        img.src = data;
+      });
+
+      let drawing = false;
+
+      function getPos(e){
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : null;
+        const clientX = touch ? touch.clientX : e.clientX;
+        const clientY = touch ? touch.clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+      }
+
+      function startDraw(e){
+        drawing = true;
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        e.preventDefault();
+      }
+      function draw(e){
+        if(!drawing) return;
+        const p = getPos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        e.preventDefault();
+      }
+      function endDraw(e){
+        drawing = false;
+        e && e.preventDefault();
+      }
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      document.addEventListener('mouseup', endDraw);
+
+      canvas.addEventListener('touchstart', startDraw, {passive:false});
+      canvas.addEventListener('touchmove', draw, {passive:false});
+      canvas.addEventListener('touchend', endDraw, {passive:false});
+
+      clearBtn.addEventListener('click', ()=>{
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        hidden.value = "";
+        showToast("تم مسح التوقيع.");
+      });
+
+      saveBtn.addEventListener('click', ()=>{
+        const dataUrl = canvas.toDataURL('image/png');
+        hidden.value = dataUrl;
+        showToast("تم اعتماد التوقيع.");
+      });
+    }
+
+    setupSignature('m_sig','m_clearSig','m_saveSig','m_sigData');
+    // إعادة تهيئة توقيع الغسيل عند فتح التبويب
+document.getElementById("tab-wash").addEventListener("shown.bs.tab", () => {
+  setupSignature('w_sig','w_clearSig','w_saveSig','w_sigData');
+});
+
+    // ===== AJAX SUBMIT =====
+    async function submitAjax(formId, sigHiddenId){
+      const form = document.getElementById(formId);
+
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+
+        const vehicle = vehicleMaster.value.trim();
+if(!vehicle){
+  showToast("فضلاً أدخل رقم اللوحة / الهيكل أولاً.");
+  return;
+}
+
+        if(!form.checkValidity()){
+          showToast("فضلاً أكمل الحقول المطلوبة.");
+          return;
+        }
+        const sig = document.getElementById(sigHiddenId).value;
+        if(!sig){
+          showToast("فضلاً اعتمد التوقيع قبل الحفظ.");
+          return;
+        }
+
+        const fd = new FormData(form);
+
+        try{
+          const res = await fetch(form.action, { method:"POST", body: fd });
+          const out = await res.json();
+
+          if(!res.ok || !out.ok){
+            showToast(out.msg || "حدث خطأ أثناء الحفظ");
+            return;
+          }
+
+          showToast(`${out.msg} — الإجمالي: ${out.total_text || ""}`);
+
+          form.reset();
+          // إعادة تعبئة التاريخ بعد reset
+          setNow();
+
+          // تفريغ hidden signature
+          document.getElementById(sigHiddenId).value = "";
+          // تفريغ الإجمالي
+          if(formId === "formMaint") document.getElementById("m_total").value = "";
+          if(formId === "formWash")  document.getElementById("w_total").value = "";
+
+        }catch(err){
+          showToast("تعذر الاتصال بالخادم.");
+        }
+      });
+    }
+// ===== Vehicle Master Binding =====
+const vehicleMaster = document.getElementById("vehicle_master");
+const mVehicle = document.getElementById("m_vehicle_id");
+const wVehicle = document.getElementById("w_vehicle_id");
+
+function syncVehicle(){
+  const val = vehicleMaster.value.trim();
+  mVehicle.value = val;
+  wVehicle.value = val;
+}
+
+vehicleMaster.addEventListener("input", syncVehicle);
+
+    submitAjax("formMaint","m_sigData");
+    submitAjax("formWash","w_sigData");
+
+    // Default date on load
+    setNow();
+
+      if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("{{ url_for('static', filename='service-worker.js') }}")
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.error("SW failed", err));
+  });
+}
+  </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>سفنز للسيارات - تسجيل الدخول</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#0B5ED7">
+
+  <style>
+    :root{
+      --blue:#0B5ED7;
+      --blue2:#0A3E9A;
+      --sky:#EAF3FF;
+      --bg:#F7FAFF;
+      --text:#0B1220;
+      --muted:#6B7280;
+      --card:#FFFFFF;
+      --border:rgba(15, 23, 42, .10);
+      --shadow:0 14px 40px rgba(2, 6, 23, .12);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial;
+      color:var(--text); background: radial-gradient(1200px 600px at 80% 10%, rgba(11,94,215,.18), transparent 60%),
+      radial-gradient(900px 500px at 10% 80%, rgba(10,62,154,.14), transparent 60%), var(--bg);
+      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px;
+    }
+    .wrap{
+  width:min(420px, 100%);
+  display:flex;
+  justify-content:center;
+}
+
+    .hero{
+      background: linear-gradient(135deg, rgba(11,94,215,.10), rgba(10,62,154,.06));
+      border:1px solid var(--border); border-radius:var(--radius); padding:22px;
+      box-shadow: var(--shadow);
+      overflow:hidden; position:relative;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:46px; height:46px; border-radius:14px;
+      background: linear-gradient(180deg, var(--blue), var(--blue2));
+      display:grid; place-items:center; color:white; font-weight:800; letter-spacing:1px;
+      box-shadow: 0 10px 25px rgba(11,94,215,.25);
+    }
+    .hero h1{margin:14px 0 6px; font-size:26px}
+    .hero p{margin:0; color:var(--muted); line-height:1.8}
+    .bullets{margin-top:18px; display:grid; gap:10px}
+    .pill{
+      background: rgba(255,255,255,.75);
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:10px 12px;
+      display:flex; align-items:center; gap:10px;
+      backdrop-filter: blur(8px);
+    }
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--blue)}
+    .login-logo{
+  display:flex;
+  justify-content:center;
+  margin-bottom:16px;
+}
+
+.login-logo img{
+  width:72px;
+  height:72px;
+  object-fit:contain;
+  background:#fff;
+  padding:8px;
+  border-radius:18px;
+  box-shadow:0 12px 30px rgba(11,94,215,.25);
+}
+
+    .card h2{margin:0 0 10px; font-size:20px}
+    .field{display:grid; gap:8px; margin-top:12px}
+    label{font-size:13px; color:var(--muted)}
+    input{
+      width:100%; padding:12px 14px; border-radius:14px;
+      border:1px solid var(--border); outline:none; font-size:14px;
+      background: #fff;
+    }
+    input:focus{border-color:rgba(11,94,215,.5); box-shadow: 0 0 0 4px rgba(11,94,215,.12)}
+    .btn{
+      width:100%; margin-top:16px; padding:12px 14px;
+      border:none; border-radius:14px; cursor:pointer; color:white; font-weight:700;
+      background: linear-gradient(180deg, var(--blue), var(--blue2));
+      box-shadow: 0 12px 25px rgba(11,94,215,.22);
+    }
+    .hint{margin-top:10px; color:var(--muted); font-size:12.5px; line-height:1.7}
+    .err{
+      margin-top:10px; padding:10px 12px; border-radius:14px;
+      border:1px solid rgba(220,38,38,.25);
+      background: rgba(220,38,38,.06); color:#991B1B; font-size:13px;
+    }
+    @media (max-width: 860px){
+      .wrap{grid-template-columns:1fr}
+      .hero{order:2}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+
+    <section class="card">
+        <!-- Company Logo -->
+<div class="login-logo">
+  <img src="{{ url_for('static', filename='7s.jpg') }}" alt="شعار سفنز">
+</div>
+
+      <h2>تسجيل الدخول</h2>
+      <form method="post">
+        <div class="field">
+          <label>اسم المستخدم</label>
+          <input name="username" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <input name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn" type="submit">دخول</button>
+        <div class="hint">
+          افتراضيًا (للتجربة): maint1 / 1234 ، wash1 / 1234 ، admin / admin
+          <br>غير كلمات المرور داخل data/users.xlsx بعد التشغيل.
+        </div>
+        {% if error %}
+          <div class="err">{{ error }}</div>
+        {% endif %}
+      </form>
+    </section>
+  </div>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("{{ url_for('static', filename='service-worker.js') }}")
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.error("SW failed", err));
+  });
+}
+</script>
+
+</body>
+</html>

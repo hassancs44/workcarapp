@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>سفنز للسيارات | لوحة البيانات</title>
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#0B5ED7">
+
+  <!-- Bootstrap RTL -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#F6F8FC;
+      --card:#FFFFFF;
+      --txt:#0F172A;
+      --muted:#64748B;
+      --line:#E2E8F0;
+      --primary:#0B5ED7;
+      --primary-2:#1E88FF;
+      --primary-soft:rgba(11,94,215,.12);
+      --shadow: 0 10px 30px rgba(2, 6, 23, .08);
+      --radius: 18px;
+
+      --ok:#16A34A;
+      --warn:#F59E0B;
+      --bad:#EF4444;
+      --chip:#F8FAFF;
+    }
+
+    body{
+      font-family:"Tajawal", system-ui, -apple-system, Segoe UI, Arial;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(11,94,215,.16), transparent 55%),
+                  radial-gradient(900px 500px at 110% 0%, rgba(30,136,255,.12), transparent 45%),
+                  var(--bg);
+      color:var(--txt);
+    }
+
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(246,248,252,.72);
+      border-bottom:1px solid rgba(226,232,240,.85);
+    }
+
+    .container-narrow{ width:min(1320px, 92vw); margin-inline:auto; }
+
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand-badge{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: 0 12px 24px rgba(11,94,215,.25);
+      position:relative; overflow:hidden;
+    }
+    .brand-badge::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: linear-gradient(120deg, rgba(255,255,255,.45), transparent 60%);
+      transform: rotate(25deg);
+    }
+    .brand-title{ line-height:1.1; font-weight:900; letter-spacing:.2px; }
+    .brand-sub{ font-size:.92rem; color:var(--muted); margin-top:2px; }
+
+    .cardx{
+      background:var(--card);
+      border:1px solid rgba(226,232,240,.92);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(226,232,240,.92);
+      background:rgba(255,255,255,.75);
+      color:var(--muted);
+      font-size:.92rem;
+    }
+
+    .section-title{ font-weight:1000; font-size:1.2rem; margin:0; }
+    .section-hint{ color:var(--muted); margin:0; font-size:.95rem; }
+
+    .form-label{ font-weight:900; margin-bottom:6px; }
+    .form-control, .form-select{
+      border-radius: 14px;
+      border:1px solid rgba(226,232,240,.98);
+      padding: 12px 12px;
+      background:#fff;
+    }
+    .form-control:focus, .form-select:focus{
+      border-color: rgba(11,94,215,.55);
+      box-shadow: 0 0 0 .2rem rgba(11,94,215,.12);
+    }
+
+    .btn-primary{
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border:none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight:1000;
+      box-shadow: 0 16px 30px rgba(11,94,215,.22);
+    }
+    .btn-outline{
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight:1000;
+      border:1px solid rgba(226,232,240,.95);
+      color: var(--txt);
+      background:#fff;
+    }
+
+    .kpi{
+      border-radius: 16px;
+      border:1px solid rgba(226,232,240,.92);
+      background: linear-gradient(180deg, rgba(246,248,252,1), rgba(255,255,255,1));
+      padding: 14px;
+      height: 100%;
+      position:relative;
+      overflow:hidden;
+    }
+    .kpi::after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: radial-gradient(circle, rgba(11,94,215,.10), transparent 55%);
+      transform: rotate(18deg);
+      pointer-events:none;
+    }
+    .kpi .v{ font-size: 1.35rem; font-weight:1000; position:relative; }
+    .kpi .s{ color:var(--muted); font-size:.92rem; margin-top:2px; position:relative; }
+    .kpi .t{ font-size:.88rem; font-weight:900; color:#0A3E9A; position:relative; }
+    .kpi small{ color:var(--muted); position:relative; }
+
+    .split{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 14px;
+    }
+    @media (max-width: 1100px){
+      .split{ grid-template-columns: 1fr; }
+    }
+
+    canvas{
+      background:#fff;
+      border:1px solid rgba(226,232,240,.92);
+      border-radius: 16px;
+      padding: 10px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border:1px solid rgba(226,232,240,.92);
+      border-radius: 16px;
+      background:#fff;
+    }
+    table{ min-width: 1300px; margin:0; }
+    thead th{
+      position: sticky;
+      top:0;
+      background: rgba(246,248,252,.98);
+      z-index: 1;
+      font-weight:1000;
+      border-bottom:1px solid rgba(226,232,240,.95);
+      white-space:nowrap;
+    }
+    tbody td{ vertical-align:middle; }
+
+    .badgex{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(11,94,215,.18);
+      background: rgba(11,94,215,.08);
+      color: #0A3E9A;
+      font-weight:1000;
+      font-size: .85rem;
+      white-space:nowrap;
+    }
+
+    .muted{ color:var(--muted); }
+
+    .pager{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
+
+    .toastx{
+      position: fixed;
+      bottom: 18px;
+      left: 18px;
+      right: 18px;
+      z-index: 9999;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+    }
+    .toastx .inner{
+      pointer-events:auto;
+      max-width: 860px;
+      width: min(860px, 92vw);
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, .92);
+      color:#fff;
+      box-shadow: 0 20px 50px rgba(2,6,23,.35);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      opacity:0;
+      transform: translateY(10px);
+      transition: .25s ease;
+    }
+    .toastx .inner.show{ opacity:1; transform: translateY(0); }
+
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size:.85rem;
+      color: rgba(255,255,255,.95);
+      white-space:nowrap;
+    }
+
+    .skeleton{
+      background: linear-gradient(90deg, rgba(226,232,240,.55), rgba(226,232,240,.25), rgba(226,232,240,.55));
+      background-size: 200% 100%;
+      animation: shimmer 1.1s infinite linear;
+      border-radius: 12px;
+      height: 14px;
+      width: 100%;
+    }
+    @keyframes shimmer{
+      0%{ background-position: 200% 0; }
+      100%{ background-position: -200% 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar py-3">
+    <div class="container-narrow d-flex align-items-center justify-content-between gap-3">
+      <div class="brand">
+  <img
+    src="{{ url_for('static', filename='7s.jpg') }}"
+    alt="شعار سفنز"
+    style="
+      width:48px;
+      height:48px;
+      object-fit:contain;
+      border-radius:14px;
+      box-shadow:0 10px 25px rgba(11,94,215,.25);
+      background:#fff;
+      padding:4px;
+    "
+  >
+  <div>
+    <div class="brand-title">سفنز للسيارات</div>
+    <div class="brand-sub">لوحة بيانات الإدارة العامة (تحليلات الورشة + المغسلة)</div>
+  </div>
+</div>
+
+
+      <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+        <span class="pill">المستخدم: <strong class="text-dark ms-1">{{ user_name or "Admin" }}</strong></span>
+        <span class="pill">تلميح: استخدم <span class="kbd">Ctrl</span> + <span class="kbd">F</span> للبحث داخل الصفحة</span>
+        <a href="/logout" class="btn btn-outline">تسجيل خروج</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="py-4">
+    <div class="container-narrow">
+
+      <!-- Header -->
+      <div class="cardx p-3 p-md-4 mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
+          <div>
+            <h1 class="section-title mb-1">لوحة البيانات والتحليلات</h1>
+            <p class="section-hint">فلاتر شاملة + مؤشرات أداء + رسوم + جداول تفصيلية (كل شيء بالعربية).</p>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline" type="button" onclick="resetFilters()">إعادة تعيين</button>
+            <button class="btn btn-primary" type="button" onclick="loadAll()">تطبيق الفلاتر</button>
+            <button class="btn btn-outline" type="button" onclick="exportExcel()">تصدير Excel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="cardx p-3 p-md-4 mb-4">
+        <div class="row g-3">
+          <div class="col-12 col-md-3">
+            <label class="form-label">نوع السجل</label>
+            <select id="service" class="form-select">
+              <option value="all">الكل</option>
+              <option value="maintenance">الصيانة</option>
+              <option value="wash">الغسيل</option>
+            </select>
+          </div>
+
+          <div class="col-6 col-md-3">
+            <label class="form-label">من تاريخ</label>
+            <input id="date_from" type="date" class="form-control">
+          </div>
+
+          <div class="col-6 col-md-3">
+            <label class="form-label">إلى تاريخ</label>
+            <input id="date_to" type="date" class="form-control">
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">اسم الموظف</label>
+            <input id="employee" type="text" class="form-control" placeholder="مثال: أحمد">
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="form-label">رقم اللوحة / الهيكل</label>
+            <input id="vehicle_id" type="text" class="form-control" placeholder="بحث باللوحة أو الهيكل">
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label">أقل مدة (دقيقة)</label>
+            <input id="min_minutes" type="number" min="0" class="form-control" placeholder="0">
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label">أكثر مدة (دقيقة)</label>
+            <input id="max_minutes" type="number" min="0" class="form-control" placeholder="مثال: 240">
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="form-label">ساعة بدء العمل</label>
+            <select id="hour" class="form-select">
+              <option value="">الكل</option>
+              <option value="0">00</option><option value="1">01</option><option value="2">02</option><option value="3">03</option>
+              <option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option>
+              <option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option>
+              <option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+              <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option>
+              <option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">بحث عام</label>
+            <input id="q" type="text" class="form-control" placeholder="بحث في (الوصف/الملاحظة/الموظف/اللوحة/التاريخ/النوع)">
+            <div class="form-text text-muted mt-1">تلميح: اكتب كلمة وسيتم البحث داخل السجلات المعروضة.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">إجمالي العمليات</div>
+            <div class="v" id="k_total"><div class="skeleton"></div></div>
+            <small>بعد تطبيق الفلاتر</small>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">عمليات الصيانة</div>
+            <div class="v" id="k_maint"><div class="skeleton"></div></div>
+            <small>ضمن النطاق</small>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">عمليات الغسيل</div>
+            <div class="v" id="k_wash"><div class="skeleton"></div></div>
+            <small>ضمن النطاق</small>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">متوسط الزمن</div>
+            <div class="v" id="k_avg"><div class="skeleton"></div></div>
+            <small>متوسط (دقيقة/ساعة)</small>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">إجمالي الزمن</div>
+            <div class="v" id="k_sum"><div class="skeleton"></div></div>
+            <small>مجموع أزمنة العمليات</small>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">الوسيط</div>
+            <div class="v" id="k_median"><div class="skeleton"></div></div>
+            <small>Median</small>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">أقل زمن</div>
+            <div class="v" id="k_min"><div class="skeleton"></div></div>
+            <small>أسرع عملية</small>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="kpi">
+            <div class="t">أعلى زمن</div>
+            <div class="v" id="k_max"><div class="skeleton"></div></div>
+            <small>أطول عملية</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="split mb-4">
+        <div class="cardx p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div>
+              <div class="fw-black" style="font-weight:1000;">العمليات عبر الزمن</div>
+              <div class="muted">عدد العمليات حسب التاريخ</div>
+            </div>
+            <span class="badgex">Trend</span>
+          </div>
+          <canvas id="chartDaily" height="140"></canvas>
+        </div>
+
+        <div class="cardx p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div>
+              <div class="fw-black" style="font-weight:1000;">مقارنة الصيانة والغسيل</div>
+              <div class="muted">عدد العمليات لكل نوع عبر الزمن</div>
+            </div>
+            <span class="badgex">Split</span>
+          </div>
+          <canvas id="chartSvcDaily" height="140"></canvas>
+        </div>
+      </div>
+
+      <div class="split mb-4">
+        <div class="cardx p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div>
+              <div class="fw-black" style="font-weight:1000;">أعلى الموظفين إنتاجية</div>
+              <div class="muted">Top 15 حسب عدد العمليات</div>
+            </div>
+            <span class="badgex">Employees</span>
+          </div>
+          <canvas id="chartEmp" height="140"></canvas>
+        </div>
+
+        <div class="cardx p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div>
+              <div class="fw-black" style="font-weight:1000;">أكثر السيارات تكرارًا</div>
+              <div class="muted">Top 15 حسب عدد الزيارات</div>
+            </div>
+            <span class="badgex">Vehicles</span>
+          </div>
+          <canvas id="chartVehicles" height="140"></canvas>
+        </div>
+      </div>
+
+      <div class="split mb-4">
+        <div class="cardx p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div>
+              <div class="fw-black" style="font-weight:1000;">توزيع المدد</div>
+              <div class="muted">0-30 / 31-60 / 61-120 / +120 دقيقة</div>
+            </div>
+            <span class="badgex">SLA</span>
+          </div>
+          <canvas id="chartBuckets" height="140"></canvas>
+        </div>
+
+        <div class="cardx p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div>
+              <div class="fw-black" style="font-weight:1000;">الضغط حسب الساعة</div>
+              <div class="muted">عدد العمليات حسب ساعة الدخول</div>
+            </div>
+            <span class="badgex">Hours</span>
+          </div>
+          <canvas id="chartHours" height="140"></canvas>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="cardx p-3 p-md-4">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
+          <div>
+            <div class="fw-black" style="font-weight:1000;">السجل التفصيلي</div>
+            <div class="muted" id="rowsHint">تحميل السجلات...</div>
+          </div>
+          <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="pill">حجم الصفحة</span>
+            <select id="pageSize" class="form-select" style="width:140px;" onchange="renderTable()">
+              <option value="15">15</option>
+              <option value="30" selected>30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>النوع</th>
+                <th>التاريخ</th>
+                <th>الموظف</th>
+                <th>اللوحة/الهيكل</th>
+                <th>وقت الدخول</th>
+                <th>وقت الخروج</th>
+                <th>الإجمالي</th>
+                <th>الوصف</th>
+                <th>ملاحظة</th>
+                <th>توثيق</th>
+                <th>تاريخ الإدخال</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="pager">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button class="btn btn-outline" type="button" onclick="prevPage()">السابق</button>
+            <button class="btn btn-outline" type="button" onclick="nextPage()">التالي</button>
+            <span class="pill" id="pageInfo">-</span>
+          </div>
+          <div class="muted">* للعرض يتم جلب آخر 2000 سجل كحد أقصى لضمان السرعة.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div class="toastx" aria-live="polite" aria-atomic="true">
+    <div class="inner" id="toast">
+      <div id="toastMsg">رسالة</div>
+      <button class="btn btn-sm btn-light" id="toastClose" type="button">إغلاق</button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================
+    // Helpers + Toast
+    // ==========================
+    const toastEl = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastClose = document.getElementById('toastClose');
+    function showToast(msg){
+      toastMsg.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(()=>toastEl.classList.remove('show'), 2800);
+    }
+    toastClose.addEventListener('click', ()=>toastEl.classList.remove('show'));
+
+    const pad2 = (n)=> String(n).padStart(2,"0");
+
+    // ==========================
+    // Default filter dates
+    // ==========================
+    function setDefaultDates(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = pad2(d.getMonth()+1);
+      const dd = pad2(d.getDate());
+      document.getElementById("date_from").value = `${yyyy}-${mm}-01`;
+      document.getElementById("date_to").value = `${yyyy}-${mm}-${dd}`;
+    }
+    setDefaultDates();
+
+    // ==========================
+    // State
+    // ==========================
+    let state = { rows: [], page: 1 };
+    let chartDaily = null, chartSvcDaily = null, chartEmp = null, chartVehicles = null, chartBuckets = null, chartHours = null;
+
+    // ==========================
+    // Params
+    // ==========================
+    function getParams(){
+      const p = new URLSearchParams();
+      ["service","date_from","date_to","employee","vehicle_id","min_minutes","max_minutes","q"].forEach(id=>{
+        const el = document.getElementById(id);
+        if(!el) return;
+        const v = (el.value || "").toString().trim();
+        if(v) p.set(id, v);
+      });
+      // hour filter is UI-only for now (server returns hours distribution, but rows filter by hour isn't applied server-side)
+      const hour = (document.getElementById("hour")?.value || "").trim();
+      if(hour) p.set("hour", hour); // optional (ignore if server doesn't use it)
+      return p.toString();
+    }
+
+    function resetFilters(){
+      document.getElementById("service").value = "all";
+      document.getElementById("employee").value = "";
+      document.getElementById("vehicle_id").value = "";
+      document.getElementById("min_minutes").value = "";
+      document.getElementById("max_minutes").value = "";
+      document.getElementById("q").value = "";
+      document.getElementById("hour").value = "";
+      setDefaultDates();
+      loadAll();
+    }
+
+    function exportExcel(){
+      const q = getParams();
+      window.location.href = "/export" + (q ? ("?" + q) : "");
+    }
+
+    // ==========================
+    // Fetch analytics
+    // ==========================
+    async function loadAll(){
+      state.page = 1;
+      const q = getParams();
+      try{
+        const res = await fetch("/api/analytics" + (q ? ("?" + q) : ""), { cache: "no-store" });
+        const out = await res.json();
+
+        if(!res.ok || !out.ok){
+          showToast(out.msg || "تعذر تحميل البيانات");
+          return;
+        }
+
+        // KPIs
+        document.getElementById("k_total").textContent  = out.stats.total ?? 0;
+        document.getElementById("k_maint").textContent  = out.stats.maintenance ?? 0;
+        document.getElementById("k_wash").textContent   = out.stats.wash ?? 0;
+        document.getElementById("k_avg").textContent    = out.stats.avg_text ?? "-";
+        document.getElementById("k_sum").textContent    = out.stats.sum_text ?? "-";
+        document.getElementById("k_median").textContent = out.stats.median_text ?? "-";
+        document.getElementById("k_min").textContent    = out.stats.min_text ?? "-";
+        document.getElementById("k_max").textContent    = out.stats.max_text ?? "-";
+
+        // Rows
+        state.rows = out.rows || [];
+        document.getElementById("rowsHint").textContent = `عدد السجلات المعروضة: ${state.rows.length}`;
+
+        // Draw charts
+        drawDaily(out.daily || []);
+        drawSvcDaily(out.svc_daily || []);
+        drawEmp(out.top_employees || []);
+        drawVehicles(out.top_vehicles || []);
+        drawBuckets(out.buckets || []);
+        drawHours(out.hours || []);
+
+        renderTable();
+
+        showToast("تم تحديث لوحة البيانات.");
+      }catch(e){
+        showToast("تعذر الاتصال بالخادم.");
+      }
+    }
+
+    // ==========================
+    // Charts builders
+    // ==========================
+    function destroyIf(chart){ if(chart) chart.destroy(); }
+
+    function drawDaily(data){
+      const labels = data.map(x=> x.date);
+      const values = data.map(x=> x.count);
+
+      destroyIf(chartDaily);
+      chartDaily = new Chart(document.getElementById("chartDaily"), {
+        type: "line",
+        data: { labels, datasets: [{ label: "عدد العمليات", data: values, tension: 0.35, fill: false }] },
+        options: { responsive:true, plugins:{ legend:{ display:true } }, scales:{ y:{ beginAtZero:true } } }
+      });
+    }
+
+    function drawSvcDaily(data){
+      // data: [{date, source, count}]
+      const dates = [...new Set(data.map(x=> x.date))].sort();
+      const map = {};
+      dates.forEach(d=> map[d] = { maintenance:0, wash:0 });
+
+      data.forEach(x=>{
+        if(!map[x.date]) map[x.date] = { maintenance:0, wash:0 };
+        map[x.date][x.source] = x.count;
+      });
+
+      const maint = dates.map(d=> map[d]?.maintenance || 0);
+      const wash = dates.map(d=> map[d]?.wash || 0);
+
+      destroyIf(chartSvcDaily);
+      chartSvcDaily = new Chart(document.getElementById("chartSvcDaily"), {
+        type: "bar",
+        data: {
+          labels: dates,
+          datasets: [
+            { label: "صيانة", data: maint },
+            { label: "غسيل", data: wash }
+          ]
+        },
+        options: {
+          responsive:true,
+          plugins:{ legend:{ display:true } },
+          scales:{ y:{ beginAtZero:true } }
+        }
+      });
+    }
+
+    function drawEmp(data){
+      const labels = data.map(x=> x.employee || "غير محدد");
+      const values = data.map(x=> x.count || 0);
+
+      destroyIf(chartEmp);
+      chartEmp = new Chart(document.getElementById("chartEmp"), {
+        type: "bar",
+        data: { labels, datasets: [{ label: "عدد العمليات", data: values }] },
+        options: { responsive:true, plugins:{ legend:{ display:true } }, scales:{ y:{ beginAtZero:true } } }
+      });
+    }
+
+    function drawVehicles(data){
+      const labels = data.map(x=> x.vehicle_id || "غير محدد");
+      const values = data.map(x=> x.count || 0);
+
+      destroyIf(chartVehicles);
+      chartVehicles = new Chart(document.getElementById("chartVehicles"), {
+        type: "bar",
+        data: { labels, datasets: [{ label: "عدد الزيارات", data: values }] },
+        options: { responsive:true, plugins:{ legend:{ display:true } }, scales:{ y:{ beginAtZero:true } } }
+      });
+    }
+
+    function drawBuckets(data){
+      const labels = data.map(x=> x.bucket);
+      const values = data.map(x=> x.count);
+
+      destroyIf(chartBuckets);
+      chartBuckets = new Chart(document.getElementById("chartBuckets"), {
+        type: "doughnut",
+        data: { labels, datasets: [{ label: "توزيع", data: values }] },
+        options: { responsive:true, plugins:{ legend:{ display:true, position:"bottom" } } }
+      });
+    }
+
+    function drawHours(data){
+  const labels = data.map(x=> (x.hour ?? "").toString().padStart(2,"0"));
+  const vals = data.map(x=> x.count ?? 0);
+
+  destroyIf(chartHours);
+  chartHours = new Chart(document.getElementById("chartHours"), {
+    type: "line",
+    data: { labels, datasets: [{ label: "عدد العمليات", data: vals, tension: 0.35 }] },
+    options: { responsive:true, plugins:{ legend:{ display:true } }, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+    // ==========================
+    // Table + Pagination
+    // ==========================
+    function pageSize(){
+      return parseInt(document.getElementById("pageSize").value, 10) || 30;
+    }
+
+    function renderTable(){
+      const size = pageSize();
+      const total = state.rows.length;
+      const pages = Math.max(1, Math.ceil(total / size));
+      if(state.page > pages) state.page = pages;
+
+      const start = (state.page - 1) * size;
+      const end = Math.min(total, start + size);
+      const slice = state.rows.slice(start, end);
+
+      const hourFilter = (document.getElementById("hour")?.value || "").trim();
+
+      // Optional client-side hour filter (if you want)
+
+
+      const tb = document.getElementById("tbody");
+      tb.innerHTML = slice.map(r=>{
+        const type = (r.source === "maintenance") ? "صيانة" : "غسيل";
+        const badge = `<span class="badgex">${type}</span>`;
+        const sig = r.signature_file
+  ? `<a class="badgex" href="/signature/${r.signature_file}" target="_blank">عرض التوقيع</a>`
+  : `<span class="muted">-</span>`;
+        const desc = (r.description && r.description !== "-") ? escapeHtml(r.description) : `<span class="muted">-</span>`;
+        const note = (r.note && r.note !== "-") ? escapeHtml(r.note) : `<span class="muted">-</span>`;
+
+        return `
+          <tr>
+            <td>${badge}</td>
+            <td>${escapeHtml((r.date||"").toString().slice(0,10))}</td>
+            <td>${escapeHtml(r.employee||"")}</td>
+            <td>${escapeHtml(r.vehicle_id||"")}</td>
+            <td>${escapeHtml(r.start_time||"")}</td>
+            <td>${escapeHtml(r.end_time||"")}</td>
+            <td>${escapeHtml(r.total_text||"")}</td>
+            <td>${desc}</td>
+            <td>${note}</td>
+            <td>${sig}</td>
+            <td>${escapeHtml(r.created_at||"")}</td>
+          </tr>
+        `;
+      }).join("");
+
+      document.getElementById("pageInfo").textContent = `صفحة ${state.page} من ${pages} — (${start+1}-${end} من ${total})`;
+    }
+
+    function prevPage(){ state.page = Math.max(1, state.page - 1); renderTable(); }
+    function nextPage(){
+      const size = pageSize();
+      const pages = Math.max(1, Math.ceil(state.rows.length / size));
+      state.page = Math.min(pages, state.page + 1);
+      renderTable();
+    }
+
+    function escapeHtml(s){
+      return (s ?? "").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ==========================
+    // Auto reload on Enter
+    // ==========================
+    ["service","date_from","date_to","employee","vehicle_id","min_minutes","max_minutes","q","hour"].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter"){
+          e.preventDefault();
+          loadAll();
+        }
+      });
+    });
+
+    // Init
+    loadAll();
+
+      if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("{{ url_for('static', filename='service-worker.js') }}")
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.error("SW failed", err));
+  });
+}
+  </script>
+</body>
+</html>
